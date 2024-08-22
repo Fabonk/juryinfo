@@ -26,6 +26,22 @@
   <div class="container">
     <h1>Gestion des Étudiants, Jurés et Évaluations</h1>
 
+    <!-- Login Form -->
+    <div id="loginForm" class="mb-4">
+      <h2>Connexion</h2>
+      <form id="login">
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur:</label>
+          <input type="text" class="form-control" id="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Mot de passe:</label>
+          <input type="password" class="form-control" id="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Se connecter</button>
+      </form>
+    </div>
+
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="true">Étudiants</button>
@@ -242,9 +258,43 @@
     let students = [];
     let jury = [];
     let evaluations = [];
+    let isAdmin = false;
+
+    document.getElementById('login').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if (username === 'admin' && password === 'admin') {
+        isAdmin = true;
+        document.getElementById('loginForm').style.display = 'none';
+        alert('Connexion réussie en tant qu\'administrateur.');
+      } else if (username === 'user' && password === 'user') {
+        isAdmin = false;
+        document.getElementById('loginForm').style.display = 'none';
+        alert('Connexion réussie en tant qu\'utilisateur.');
+      } else {
+        alert('Nom d\'utilisateur ou mot de passe incorrect.');
+      }
+      updatePermissions();
+    });
+
+    function updatePermissions() {
+      const adminElements = document.querySelectorAll('.admin-only');
+      adminElements.forEach(element => {
+        element.style.display = isAdmin ? 'block' : 'none';
+      });
+      const userElements = document.querySelectorAll('.user-only');
+      userElements.forEach(element => {
+        element.style.display = !isAdmin ? 'block' : 'none';
+      });
+    }
 
     document.getElementById('studentForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      if (!isAdmin) {
+        alert('Vous n\'avez pas les permissions pour ajouter un étudiant.');
+        return;
+      }
       const student = {
         name: document.getElementById('studentName').value,
         gender: document.getElementById('studentGender').value,
@@ -260,6 +310,10 @@
 
     document.getElementById('juryForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      if (!isAdmin) {
+        alert('Vous n\'avez pas les permissions pour ajouter un juré.');
+        return;
+      }
       const juror = {
         name: document.getElementById('juryName').value,
         quality: document.getElementById('juryQuality').value,
@@ -273,25 +327,39 @@
     });
 
     function updateStudentSelect() {
-      const select = document.getElementById('studentSelectEncadrement');
-      select.innerHTML = '<option value="">Choisir...</option>';
+      const selectEncadrement = document.getElementById('studentSelectEncadrement');
+      const selectDefense = document.getElementById('studentSelectDefense');
+      selectEncadrement.innerHTML = '<option value="">Choisir...</option>';
+      selectDefense.innerHTML = '<option value="">Choisir...</option>';
       students.forEach((student, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${student.name} (${student.class})`;
-        select.appendChild(option);
+        const optionEncadrement = document.createElement('option');
+        optionEncadrement.value = index;
+        optionEncadrement.textContent = `${student.name} (${student.class})`;
+        selectEncadrement.appendChild(optionEncadrement);
+
+        const optionDefense = document.createElement('option');
+        optionDefense.value = index;
+        optionDefense.textContent = `${student.name} (${student.class})`;
+        selectDefense.appendChild(optionDefense);
       });
     }
 
     function updateJuryQualitySelect() {
-      const select = document.getElementById('juryQualitySelectEncadrement');
-      select.innerHTML = '<option value="">Choisir...</option>';
+      const selectEncadrement = document.getElementById('juryQualitySelectEncadrement');
+      const selectDefense = document.getElementById('juryQualitySelectDefense');
+      selectEncadrement.innerHTML = '<option value="">Choisir...</option>';
+      selectDefense.innerHTML = '<option value="">Choisir...</option>';
       const qualities = [...new Set(jury.map(j => j.quality))];
       qualities.forEach(quality => {
-        const option = document.createElement('option');
-        option.value = quality;
-        option.textContent = quality;
-        select.appendChild(option);
+        const optionEncadrement = document.createElement('option');
+        optionEncadrement.value = quality;
+        optionEncadrement.textContent = quality;
+        selectEncadrement.appendChild(optionEncadrement);
+
+        const optionDefense = document.createElement('option');
+        optionDefense.value = quality;
+        optionDefense.textContent = quality;
+        selectDefense.appendChild(optionDefense);
       });
     }
 
@@ -305,7 +373,21 @@
       }
     });
 
+    document.getElementById('studentSelectDefense').addEventListener('change', function() {
+      const studentIndex = this.value;
+      if (studentIndex !== '') {
+        const student = students[studentIndex];
+        document.getElementById('studentClassDefense').value = student.class;
+      } else {
+        document.getElementById('studentClassDefense').value = '';
+      }
+    });
+
     async function importStudents() {
+      if (!isAdmin) {
+        alert('Vous n\'avez pas les permissions pour importer des étudiants.');
+        return;
+      }
       const file = document.getElementById('studentImport').files[0];
       if (file) {
         const reader = new FileReader();
@@ -335,6 +417,10 @@
     }
 
     async function importJury() {
+      if (!isAdmin) {
+        alert('Vous n\'avez pas les permissions pour importer des jurés.');
+        return;
+      }
       const file = document.getElementById('juryImport').files[0];
       if (file) {
         const reader = new FileReader();
@@ -396,8 +482,10 @@
       const tableBody = document.getElementById('studentTableBody');
       tableBody.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, "students"));
+      students = [];
       querySnapshot.forEach(doc => {
         const student = doc.data();
+        students.push(student);
         const row = tableBody.insertRow();
         row.insertCell(0).textContent = student.name;
         row.insertCell(1).textContent = student.gender;
@@ -406,18 +494,22 @@
         const actionsCell = row.insertCell(4);
         actionsCell.className = 'action-buttons';
         actionsCell.innerHTML = `
-          <button class="btn btn-sm btn-warning" onclick="editStudent('${doc.id}')"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-danger" onclick="deleteStudent('${doc.id}')"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-sm btn-warning admin-only" onclick="editStudent('${doc.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger admin-only" onclick="deleteStudent('${doc.id}')"><i class="bi bi-trash"></i></button>
         `;
       });
+      updateStudentSelect();
+      updatePermissions();
     }
 
     async function updateJuryTable() {
       const tableBody = document.getElementById('juryTableBody');
       tableBody.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, "jury"));
+      jury = [];
       querySnapshot.forEach(doc => {
         const juror = doc.data();
+        jury.push(juror);
         const row = tableBody.insertRow();
         row.insertCell(0).textContent = juror.name;
         row.insertCell(1).textContent = juror.quality;
@@ -425,10 +517,12 @@
         const actionsCell = row.insertCell(3);
         actionsCell.className = 'action-buttons';
         actionsCell.innerHTML = `
-          <button class="btn btn-sm btn-warning" onclick="editJury('${doc.id}')"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-danger" onclick="deleteJury('${doc.id}')"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-sm btn-warning admin-only" onclick="editJury('${doc.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger admin-only" onclick="deleteJury('${doc.id}')"><i class="bi bi-trash"></i></button>
         `;
       });
+      updateJuryQualitySelect();
+      updatePermissions();
     }
 
     async function updateEvaluationTable() {
@@ -446,10 +540,11 @@
         const actionsCell = row.insertCell(5);
         actionsCell.className = 'action-buttons';
         actionsCell.innerHTML = `
-          <button class="btn btn-sm btn-warning" onclick="editEvaluation('${doc.id}')"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-danger" onclick="deleteEvaluation('${doc.id}')"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-sm btn-warning admin-only" onclick="editEvaluation('${doc.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger admin-only" onclick="deleteEvaluation('${doc.id}')"><i class="bi bi-trash"></i></button>
         `;
       });
+      updatePermissions();
     }
 
     async function editStudent(id) {
