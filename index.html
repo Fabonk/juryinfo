@@ -1,0 +1,444 @@
+<html><head><base href="https://app.etudiant-gestion.edu/" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Étudiants, Jurés et Évaluations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+      body { font-family: Arial, sans-serif; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+      h1 { text-align: center; color: #007bff; }
+      .nav-tabs { margin-bottom: 20px; }
+      .form-group { margin-bottom: 15px; }
+      #importResult, #juryImportResult { margin-top: 20px; }
+      .grid-container { margin-top: 30px; }
+      .table th { background-color: #f8f9fa; }
+      .action-buttons { white-space: nowrap; }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+      <h1>Gestion des Étudiants, Jurés et Évaluations</h1>
+      
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="true">Étudiants</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="jury-tab" data-bs-toggle="tab" data-bs-target="#jury" type="button" role="tab" aria-controls="jury" aria-selected="false">Jurés</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab" aria-controls="evaluation" aria-selected="false">Évaluation</button>
+        </li>
+      </ul>
+      
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="students" role="tabpanel" aria-labelledby="students-tab">
+          <h2>Gestion des Étudiants</h2>
+          <form id="studentForm">
+            <div class="form-group">
+              <label for="studentName">Nom complet:</label>
+              <input type="text" class="form-control" id="studentName" required>
+            </div>
+            <div class="form-group">
+              <label for="studentGender">Sexe:</label>
+              <select class="form-control" id="studentGender" required>
+                <option value="">Choisir...</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="studentClass">Classe:</label>
+              <select class="form-control" id="studentClass" required>
+                <option value="">Choisir...</option>
+                <option value="1A">1ère année</option>
+                <option value="2A">2ème année</option>
+                <option value="3A">3ème année</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="studentJury">Jury:</label>
+              <select class="form-control" id="studentJury" required>
+                <option value="">Choisir...</option>
+                <option value="A">Jury A</option>
+                <option value="B">Jury B</option>
+                <option value="C">Jury C</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Ajouter Étudiant</button>
+          </form>
+          <hr>
+          <h3>Importer des Étudiants</h3>
+          <input type="file" id="studentImport" accept=".xlsx,.xls">
+          <button onclick="importStudents()" class="btn btn-secondary">Importer</button>
+          <div id="importResult"></div>
+          
+          <div class="grid-container">
+            <h3>Liste des Étudiants</h3>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Nom complet</th>
+                  <th>Sexe</th>
+                  <th>Classe</th>
+                  <th>Jury</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="jury" role="tabpanel" aria-labelledby="jury-tab">
+          <h2>Gestion des Jurés</h2>
+          <form id="juryForm">
+            <div class="form-group">
+              <label for="juryName">Nom complet:</label>
+              <input type="text" class="form-control" id="juryName" required>
+            </div>
+            <div class="form-group">
+              <label for="juryQuality">Qualité:</label>
+              <input type="text" class="form-control" id="juryQuality" required>
+            </div>
+            <div class="form-group">
+              <label for="juryAssignment">Jury:</label>
+              <select class="form-control" id="juryAssignment" required>
+                <option value="">Choisir...</option>
+                <option value="A">Jury A</option>
+                <option value="B">Jury B</option>
+                <option value="C">Jury C</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Ajouter Juré</button>
+          </form>
+          <hr>
+          <h3>Importer des Jurés</h3>
+          <input type="file" id="juryImport" accept=".xlsx,.xls">
+          <button onclick="importJury()" class="btn btn-secondary">Importer</button>
+          <div id="juryImportResult"></div>
+          
+          <div class="grid-container">
+            <h3>Liste des Jurés</h3>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Nom complet</th>
+                  <th>Qualité</th>
+                  <th>Jury</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="juryTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="evaluation" role="tabpanel" aria-labelledby="evaluation-tab">
+          <h2>Évaluation</h2>
+          <form id="evaluationForm">
+            <div class="form-group">
+              <label for="juryQualitySelect">Qualité du Juré:</label>
+              <select class="form-control" id="juryQualitySelect" required>
+                <option value="">Choisir...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="studentSelect">Étudiant:</label>
+              <select class="form-control" id="studentSelect" required>
+                <option value="">Choisir...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="studentClass">Classe:</label>
+              <input type="text" class="form-control" id="studentClass" readonly>
+            </div>
+            <div class="form-group">
+              <label for="coteEncadrement">Côte d'encadrement:</label>
+              <input type="number" class="form-control" id="coteEncadrement" min="0" max="20" step="0.5" required>
+            </div>
+            <div class="form-group">
+              <label for="coteDefense">Côte de défense:</label>
+              <input type="number" class="form-control" id="coteDefense" min="0" max="20" step="0.5" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Évaluer</button>
+          </form>
+          
+          <div class="grid-container">
+            <h3>Liste des Évaluations</h3>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Étudiant</th>
+                  <th>Classe</th>
+                  <th>Juré</th>
+                  <th>Côte d'encadrement</th>
+                  <th>Côte de défense</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="evaluationTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+    let students = [];
+    let jury = [];
+    let evaluations = [];
+    
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const student = {
+        name: document.getElementById('studentName').value,
+        gender: document.getElementById('studentGender').value,
+        class: document.getElementById('studentClass').value,
+        jury: document.getElementById('studentJury').value
+      };
+      students.push(student);
+      updateStudentSelect();
+      updateStudentTable();
+      this.reset();
+      alert('Étudiant ajouté avec succès!');
+    });
+    
+    document.getElementById('juryForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const juror = {
+        name: document.getElementById('juryName').value,
+        quality: document.getElementById('juryQuality').value,
+        jury: document.getElementById('juryAssignment').value
+      };
+      jury.push(juror);
+      updateJuryQualitySelect();
+      updateJuryTable();
+      this.reset();
+      alert('Juré ajouté avec succès!');
+    });
+    
+    function updateStudentSelect() {
+      const select = document.getElementById('studentSelect');
+      select.innerHTML = '<option value="">Choisir...</option>';
+      students.forEach((student, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = student.name;
+        select.appendChild(option);
+      });
+    }
+    
+    function updateJuryQualitySelect() {
+      const select = document.getElementById('juryQualitySelect');
+      select.innerHTML = '<option value="">Choisir...</option>';
+      const qualities = [...new Set(jury.map(j => j.quality))];
+      qualities.forEach(quality => {
+        const option = document.createElement('option');
+        option.value = quality;
+        option.textContent = quality;
+        select.appendChild(option);
+      });
+    }
+    
+    document.getElementById('studentSelect').addEventListener('change', function() {
+      const studentIndex = this.value;
+      if (studentIndex !== '') {
+        const student = students[studentIndex];
+        document.getElementById('studentClass').value = student.class;
+      } else {
+        document.getElementById('studentClass').value = '';
+      }
+    });
+    
+    function importStudents() {
+      const file = document.getElementById('studentImport').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          jsonData.forEach(row => {
+            students.push({
+              name: row['Nom complet'],
+              gender: row['Sexe'],
+              class: row['Classe'],
+              jury: row['Jury']
+            });
+          });
+          
+          updateStudentSelect();
+          updateStudentTable();
+          document.getElementById('importResult').textContent = `${jsonData.length} étudiants importés avec succès.`;
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+    
+    function importJury() {
+      const file = document.getElementById('juryImport').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          jsonData.forEach(row => {
+            jury.push({
+              name: row['Nom complet'],
+              quality: row['Qualité'],
+              jury: row['Jury']
+            });
+          });
+          
+          updateJuryQualitySelect();
+          updateJuryTable();
+          document.getElementById('juryImportResult').textContent = `${jsonData.length} jurés importés avec succès.`;
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+    
+    document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const evaluation = {
+        student: students[document.getElementById('studentSelect').value].name,
+        class: document.getElementById('studentClass').value,
+        jury: document.getElementById('juryQualitySelect').value,
+        coteEncadrement: document.getElementById('coteEncadrement').value,
+        coteDefense: document.getElementById('coteDefense').value
+      };
+      evaluations.push(evaluation);
+      updateEvaluationTable();
+      this.reset();
+      alert('Évaluation enregistrée!');
+    });
+    
+    function updateStudentTable() {
+      const tableBody = document.getElementById('studentTableBody');
+      tableBody.innerHTML = '';
+      students.forEach((student, index) => {
+        const row = tableBody.insertRow();
+        row.insertCell(0).textContent = student.name;
+        row.insertCell(1).textContent = student.gender;
+        row.insertCell(2).textContent = student.class;
+        row.insertCell(3).textContent = student.jury;
+        const actionsCell = row.insertCell(4);
+        actionsCell.className = 'action-buttons';
+        actionsCell.innerHTML = `
+          <button class="btn btn-sm btn-warning" onclick="editStudent(${index})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteStudent(${index})"><i class="bi bi-trash"></i></button>
+        `;
+      });
+    }
+    
+    function updateJuryTable() {
+      const tableBody = document.getElementById('juryTableBody');
+      tableBody.innerHTML = '';
+      jury.forEach((juror, index) => {
+        const row = tableBody.insertRow();
+        row.insertCell(0).textContent = juror.name;
+        row.insertCell(1).textContent = juror.quality;
+        row.insertCell(2).textContent = juror.jury;
+        const actionsCell = row.insertCell(3);
+        actionsCell.className = 'action-buttons';
+        actionsCell.innerHTML = `
+          <button class="btn btn-sm btn-warning" onclick="editJury(${index})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteJury(${index})"><i class="bi bi-trash"></i></button>
+        `;
+      });
+    }
+    
+    function updateEvaluationTable() {
+      const tableBody = document.getElementById('evaluationTableBody');
+      tableBody.innerHTML = '';
+      evaluations.forEach((evaluation, index) => {
+        const row = tableBody.insertRow();
+        row.insertCell(0).textContent = evaluation.student;
+        row.insertCell(1).textContent = evaluation.class;
+        row.insertCell(2).textContent = evaluation.jury;
+        row.insertCell(3).textContent = evaluation.coteEncadrement;
+        row.insertCell(4).textContent = evaluation.coteDefense;
+        const actionsCell = row.insertCell(5);
+        actionsCell.className = 'action-buttons';
+        actionsCell.innerHTML = `
+          <button class="btn btn-sm btn-warning" onclick="editEvaluation(${index})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteEvaluation(${index})"><i class="bi bi-trash"></i></button>
+        `;
+      });
+    }
+    
+    function editStudent(index) {
+      const student = students[index];
+      document.getElementById('studentName').value = student.name;
+      document.getElementById('studentGender').value = student.gender;
+      document.getElementById('studentClass').value = student.class;
+      document.getElementById('studentJury').value = student.jury;
+      students.splice(index, 1);
+      updateStudentTable();
+      updateStudentSelect();
+    }
+    
+    function deleteStudent(index) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
+        students.splice(index, 1);
+        updateStudentTable();
+        updateStudentSelect();
+      }
+    }
+    
+    function editJury(index) {
+      const juror = jury[index];
+      document.getElementById('juryName').value = juror.name;
+      document.getElementById('juryQuality').value = juror.quality;
+      document.getElementById('juryAssignment').value = juror.jury;
+      jury.splice(index, 1);
+      updateJuryTable();
+      updateJuryQualitySelect();
+    }
+    
+    function deleteJury(index) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce juré ?')) {
+        jury.splice(index, 1);
+        updateJuryTable();
+        updateJuryQualitySelect();
+      }
+    }
+    
+    function editEvaluation(index) {
+      const evaluation = evaluations[index];
+      document.getElementById('studentSelect').value = students.findIndex(s => s.name === evaluation.student);
+      document.getElementById('studentClass').value = evaluation.class;
+      document.getElementById('juryQualitySelect').value = evaluation.jury;
+      document.getElementById('coteEncadrement').value = evaluation.coteEncadrement;
+      document.getElementById('coteDefense').value = evaluation.coteDefense;
+      evaluations.splice(index, 1);
+      updateEvaluationTable();
+    }
+    
+    function deleteEvaluation(index) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?')) {
+        evaluations.splice(index, 1);
+        updateEvaluationTable();
+      }
+    }
+    
+    // Initialize tables
+    updateStudentTable();
+    updateJuryTable();
+    updateEvaluationTable();
+    </script>
+    </body></html>
